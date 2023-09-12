@@ -13,14 +13,17 @@ recognizer = sr.Recognizer()
 # Create a Streamlit input element for microphone input
 audio_input = st.empty()
 
+# Initialize PyAudio and stream variables
+p = pyaudio.PyAudio()
+stream = None
+
 # Check if the microphone input is requested
 if st.checkbox("Use Microphone for English Input"):
     with audio_input:
         st.warning("Listening for audio input... Speak in English.")
         try:
             with sr.Microphone() as source:
-                # Adjust the microphone settings as needed
-                p = pyaudio.PyAudio()
+                # Open the audio stream
                 stream = p.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True, frames_per_buffer=1024)
 
                 audio = b""
@@ -55,6 +58,7 @@ if st.checkbox("Use Microphone for English Input"):
             st.warning("Speech recognition could not understand the audio.")
         finally:
             # Clean up audio resources
-            stream.stop_stream()
-            stream.close()
+            if stream:
+                stream.stop_stream()
+                stream.close()
             p.terminate()
