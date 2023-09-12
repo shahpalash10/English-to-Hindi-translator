@@ -6,3 +6,4 @@ numpy
 keras
 h5py
 gtts
+speech_recognition
