@@ -4,3 +4,4 @@ matplotlib
 numpy
 keras
 h5py
+streamlit
