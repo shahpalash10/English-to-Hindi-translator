@@ -7,3 +7,4 @@ keras
 h5py
 gtts
 SpeechRecognition
+pyaudio
