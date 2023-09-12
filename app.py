@@ -2,7 +2,7 @@ import streamlit as st
 from transformers import pipeline
 from gtts import gTTS
 import speech_recognition as sr
-import sounddevice as sd  # Import sounddevice
+import pyaudio
 
 # Create a translation pipeline
 pipe = pipeline('translation', model='Helsinki-NLP/opus-mt-en-hi')
@@ -18,16 +18,19 @@ if st.checkbox("Use Microphone for English Input"):
     with audio_input:
         st.warning("Listening for audio input... Speak in English.")
         try:
-            # Replace pyaudio.Microphone with sd.InputStream
-            with sd.InputStream(callback=None, channels=1, dtype='int16', samplerate=16000):
-                with sr.AudioFile("temp.wav") as source:  # Save audio to temp.wav
-                    recognizer.adjust_for_ambient_noise(source)
-                    audio = recognizer.listen(source)
+            with sr.Microphone() as source:
+                # Adjust the microphone settings as needed
+                p = pyaudio.PyAudio()
+                stream = p.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True, frames_per_buffer=1024)
+
+                audio = b""
+                for _ in range(0, int(16000 / 1024 * 5)):  # Adjust the recording duration as needed
+                    audio += stream.read(1024)
+
+                # Recognize the English speech
+                english_text = recognizer.recognize_google(audio, language='en')
 
             st.success("Audio input recorded. Translating...")
-
-            # Recognize the English speech
-            english_text = recognizer.recognize_google(audio, language='en')
 
             # Translate the English text to Hindi
             out = pipe(english_text, src_lang='en', tgt_lang='hi')
@@ -50,3 +53,8 @@ if st.checkbox("Use Microphone for English Input"):
             st.error(f"Could not request results from Google Speech Recognition service: {e}")
         except sr.UnknownValueError:
             st.warning("Speech recognition could not understand the audio.")
+        finally:
+            # Clean up audio resources
+            stream.stop_stream()
+            stream.close()
+            p.terminate()
