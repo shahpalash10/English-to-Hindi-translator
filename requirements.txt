@@ -5,3 +5,4 @@ numpy
 keras
 h5py
 streamlit
+sentencepiece
